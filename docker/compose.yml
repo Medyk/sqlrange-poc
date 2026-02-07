@@ -1,0 +1,30 @@
+---
+
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro,z
+
+  flyway:
+    image: flyway/flyway:12
+    user: 1000:1000
+    environment:
+      FLYWAY_USER: docker
+      FLYWAY_PASSWORD: docker
+      FLYWAY_URL: jdbc:postgresql://db:5432/docker
+    command: migrate
+    volumes:
+      - ./flyway:/flyway/sql:ro,z
+    restart: "no"
+
+
+volumes:
+  db_data:
