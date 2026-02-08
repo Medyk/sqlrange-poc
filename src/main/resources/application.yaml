@@ -1,3 +1,10 @@
 spring:
   application:
     name: sqlrange
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    username: docker
+    password: docker
+    url: jdbc:postgresql://localhost:5432/docker
+  jpa:
+    show-sql: true
