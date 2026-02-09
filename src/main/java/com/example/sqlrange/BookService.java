@@ -16,9 +16,18 @@ public class BookService {
         this.bookRepository = bookRepository;
     }
 
-    public List<Book> findBooksActiveInPeriod(OffsetDateTime start, OffsetDateTime end, Pageable pageable) {
+    public List<Book> findBooksAtTimestamp(OffsetDateTime timestamp, Pageable pageable) {
+        Specification<Book> spec = BookSpecifications.insideRange(timestamp);
+
+        return bookRepository.findAll(spec, pageable).getContent();
+    }
+
+
+    public List<Book> findBooksActiveInPeriod(OffsetDateTime start, OffsetDateTime end, boolean delta, Pageable pageable) {
         // Wywołanie
-        Specification<Book> spec = BookSpecifications.overlapsRange(start, end);
+        Specification<Book> spec1 = BookSpecifications.notNull();
+        Specification<Book> spec2 = delta ? BookSpecifications.deltaRange(start, end) : BookSpecifications.overlapsRange(start, end);
+        Specification<Book> spec = spec1.and(spec2); // Spec obsługuje Predicate = null
 
         return bookRepository.findAll(spec, pageable).getContent();
     }

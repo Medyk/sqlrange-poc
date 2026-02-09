@@ -13,5 +13,11 @@ public class PostgresOperatorsContributor implements FunctionContributor {
                 "(?1 && ?2)",
                 functionContributions.getTypeConfiguration().getBasicTypeRegistry().resolve(StandardBasicTypes.BOOLEAN)
         );
+        // Rejestrujemy funkcję 'contains', która w SQL zamieni się na operator @>
+        functionContributions.getFunctionRegistry().registerPattern(
+                "contains",
+                "(?1 @> ?2)",
+                functionContributions.getTypeConfiguration().getBasicTypeRegistry().resolve(StandardBasicTypes.BOOLEAN)
+        );
     }
 }

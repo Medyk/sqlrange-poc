@@ -26,6 +26,10 @@ public class Book {
     @EmbeddedId
     @JsonUnwrapped
     private BookId id;
+    @Column(name = "revision_from")
+    private OffsetDateTime revisionFrom;
+    @Column(name = "revision_to")
+    private OffsetDateTime revisionTo;
 
     private String title;
     private String author;

@@ -41,13 +41,18 @@ public class BookController {
      * @return
      */
     @GetMapping(value = "/", produces = "application/json")
-    public ResponseEntity<?> getBooks(@RequestParam(required = false) OffsetDateTime since, @RequestParam(required = false) OffsetDateTime until,
-                                      @PageableDefault() Pageable pageable
+    public ResponseEntity<?> getBooks(
+            @RequestParam(required = false) OffsetDateTime timestamp,
+            @RequestParam(required = false) OffsetDateTime since, @RequestParam(required = false) OffsetDateTime until, @RequestParam(required = false, defaultValue = "true") boolean delta,
+            @PageableDefault() Pageable pageable
     ) {
+        if (timestamp != null) {
+            return ResponseEntity.ok(bookService.findBooksAtTimestamp(timestamp, translateSortProperty(pageable)));
+        }
         if (since != null && until != null && !since.isBefore(until)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.TEXT_PLAIN).body("BAD REQUEST");
         }
-        return ResponseEntity.ok(bookService.findBooksActiveInPeriod(since, until, translateSortProperty(pageable)));
+        return ResponseEntity.ok(bookService.findBooksActiveInPeriod(since, until, delta, translateSortProperty(pageable)));
     }
 
     private Pageable translateSortProperty(Pageable pageable) {

@@ -1,29 +1,81 @@
 package com.example.sqlrange;
 
 import io.hypersistence.utils.hibernate.type.range.Range;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 public class BookSpecifications {
+
+    /*
+    SELECT * FROM books WHERE uuid IS NOT NULL;
+     */
+    public static Specification<Book> notNull() {
+        return (root, query, cb) -> cb.isNotNull(root.get("id").get("uuid"));
+    }
+
+    /*
+    SELECT *
+    FROM books
+    WHERE
+      (revision_from >= :since AND revision_from < :until
+      OR
+      revision_to >= :since AND revision_to < :until)
+     */
+    public static Specification<Book> deltaRange(final OffsetDateTime since, final OffsetDateTime until) {
+        return (root, query, cb) -> {
+            if (since == null && until == null) return null;
+
+            Predicate fromInRange = cb.and( // Builder nie obsługuje Predicate = null
+                    since == null ? cb.conjunction() : cb.greaterThanOrEqualTo(root.get("revisionFrom"), since),
+                    until == null ? cb.conjunction() : cb.lessThan(root.get("revisionFrom"), until)
+            );
+
+            Predicate toInRange = cb.and( // Builder nie obsługuje Predicate = null
+                    since == null ? cb.conjunction() : cb.greaterThanOrEqualTo(root.get("revisionTo"), since),
+                    until == null ? cb.conjunction() : cb.lessThan(root.get("revisionTo"), until)
+            );
+
+            return cb.or(fromInRange, toInRange);
+        };
+    }
+
+    /*
+    SELECT * FROM books
+    WHERE revision_range @> :timestamp
+     */
+    public static Specification<Book> insideRange(final OffsetDateTime timestamp) {
+        return (root, query, cb) -> {
+            if (timestamp == null) return null;
+
+            return cb.isTrue(
+                    cb.function(
+                            "contains",
+                            Boolean.class,
+                            root.get("revisionRange"),
+                            cb.literal(timestamp)
+                    )
+            );
+        };
+
+    }
 
     /**
      * Filtruje książki, których zakres 'revision_range_cc' pokrywa się (&&) z podanym zakresem dat.
      */
-    public static Specification<Book> overlapsRange(final OffsetDateTime inSince, final OffsetDateTime inUntil) {
+    public static Specification<Book> overlapsRange(final OffsetDateTime since, final OffsetDateTime until) {
         return (root, query, cb) -> {
-            final OffsetDateTime since = inSince == null ? OffsetDateTime.MIN : inSince;
-            final OffsetDateTime until = inUntil == null ? OffsetDateTime.MAX : inUntil;
+            if (since == null && until == null) return null;
 
             // 1. Tworzymy obiekt Range przy użyciu Hypersistence Utils
             // Tworzymy zakres [since, until) - typowo dla zapytań
             // Możesz użyć Range.closed(), Range.open() itp. w zależności od potrzeb.
             Range<OffsetDateTime> queryRange;
-            if (OffsetDateTime.MIN.equals(since) && OffsetDateTime.MAX.equals(until)) {
-                queryRange = Range.infinite(OffsetDateTime.class);
-            } else if (OffsetDateTime.MIN.equals(since)) {
+            if (since == null) {
                 queryRange = Range.infiniteOpen(until);
-            } else if (OffsetDateTime.MAX.equals(until)) {
+            } else if (until == null) {
                 queryRange = Range.closedInfinite(since);
             } else {
                 queryRange = Range.closedOpen(since, until);
