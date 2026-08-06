@@ -9,15 +9,12 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
@@ -34,6 +31,24 @@ public class BookController {
     public void favicon() {
         throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     }
+
+    @PutMapping("/{uuid}")
+    public ResponseEntity<Book> updateBook(
+            @PathVariable UUID uuid,
+            @RequestBody UpdateBookRequest request) {
+
+        // Call the service method
+        Book updatedBook = bookService.updateBook(
+                uuid,
+                request.revision(),
+                request.title()
+        );
+
+        // Return the newly inserted row containing the incremented revision
+        // and the database-generated timestamp fields
+        return ResponseEntity.ok(updatedBook);
+    }
+
 
     /**
      * Get books.

@@ -12,12 +12,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.Type;
 
 import java.time.OffsetDateTime;
 
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity(name = "Book")
@@ -26,9 +27,11 @@ public class Book {
     @EmbeddedId
     @JsonUnwrapped
     private BookId id;
-    @Column(name = "revision_from")
+    @Column(name = "revision_from", insertable = false, updatable = false)
+    @Generated // db generated value
     private OffsetDateTime revisionFrom;
-    @Column(name = "revision_to")
+    @Column(name = "revision_to", insertable = false, updatable = false)
+    @Generated // db generated value
     private OffsetDateTime revisionTo;
 
     private String title;
@@ -40,6 +43,7 @@ public class Book {
     // https://vladmihalcea.com/map-postgresql-range-column-type-jpa-hibernate/
     @Type(PostgreSQLRangeType.class)
     @Column(name = "revision_range", columnDefinition = "tstzrange", insertable = false, updatable = false)
+    @Generated // db generated value
     private Range<OffsetDateTime> revisionRange;
 
     @JsonGetter("revisionRange")
@@ -49,6 +53,7 @@ public class Book {
 
     @Type(PostgreSQLRangeType.class)
     @Column(name = "revision_range_cc", columnDefinition = "tstzrange", insertable = false, updatable = false)
+    @Generated // db generated value
     private Range<OffsetDateTime> revisionRangeCc;
 
     @JsonGetter("revisionRangeCc")
