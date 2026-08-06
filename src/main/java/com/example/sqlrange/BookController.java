@@ -1,6 +1,6 @@
 package com.example.sqlrange;
 
-import org.apache.coyote.Response;
+import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
@@ -11,6 +11,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -37,18 +38,24 @@ public class BookController {
     @PutMapping("/{uuid}")
     public ResponseEntity<Book> updateBook(
             @PathVariable UUID uuid,
-            @RequestBody UpdateBookRequest request) {
+            @RequestBody UpdateBookRequest request
+    ) {
+        try {
+            // Call the service method
+            Book updatedBook = bookService.updateBook(
+                    uuid,
+                    request.revision(),
+                    request.title()
+            );
 
-        // Call the service method
-        Book updatedBook = bookService.updateBook(
-                uuid,
-                request.revision(),
-                request.title()
-        );
-
-        // Return the newly inserted row containing the incremented revision
-        // and the database-generated timestamp fields
-        return ResponseEntity.ok(updatedBook);
+            // Return the newly inserted row containing the incremented revision
+            // and the database-generated timestamp fields
+            return ResponseEntity.ok(updatedBook);
+        } catch (EntityNotFoundException ex) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        } catch (ObjectOptimisticLockingFailureException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT);
+        }
     }
 
 
@@ -67,7 +74,7 @@ public class BookController {
 
         List<Book> result = bookService.findBooksWithSpecs(spec1.and(spec2));
         if (result.isEmpty()) {
-            return ResponseEntity.notFound().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
         return ResponseEntity.ok(result.getFirst());
     }
