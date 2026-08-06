@@ -3,6 +3,7 @@ package com.example.sqlrange;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
@@ -25,10 +26,19 @@ public class BookService {
     }
 
 
+    public List<Book> findBooksWithSpecs(Specification<Book> specification, Sort sort) {
+        return bookRepository.findAll(specification, sort);
+    }
+
+
+    public List<Book> findBooksWithSpecs(Specification<Book> specification, Pageable pageable) {
+        return bookRepository.findAll(specification, pageable).getContent();
+    }
+
+
     public List<Book> findBooksAtTimestamp(OffsetDateTime timestamp, Pageable pageable) {
         Specification<Book> spec = BookSpecifications.insideRange(timestamp);
-
-        return bookRepository.findAll(spec, pageable).getContent();
+        return findBooksWithSpecs(spec, pageable);
     }
 
 
@@ -36,9 +46,7 @@ public class BookService {
         // Wywołanie
         Specification<Book> spec1 = BookSpecifications.notNull();
         Specification<Book> spec2 = delta ? BookSpecifications.deltaRange(start, end) : BookSpecifications.overlapsRange(start, end);
-        Specification<Book> spec = spec1.and(spec2); // Spec obsługuje Predicate = null
-
-        return bookRepository.findAll(spec, pageable).getContent();
+        return findBooksWithSpecs(spec1.and(spec2), pageable); // Spec obsługuje Predicate = null
     }
 
 

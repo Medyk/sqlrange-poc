@@ -60,6 +60,35 @@ public class BookController {
 
 
     /**
+     * Get all revisions of a book.
+     */
+    @GetMapping(value = "/{uuid}/-/history", produces = "application/json")
+    public ResponseEntity<List<Book>> getBookHistory(
+            @PathVariable UUID uuid
+    ) {
+        Specification<Book> spec = BookSpecifications.uuid(uuid);
+        Sort sort = Sort.by(Sort.Direction.DESC, "revision");
+        List<Book> result = bookService.findBooksWithSpecs(spec, translateSortProperty(sort));
+        if (result.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping(value = "/{uuid}/{revision}", produces = "application/json")
+    public ResponseEntity<Book> getBookRevision(
+            @PathVariable UUID uuid,
+            @PathVariable Integer revision
+    ) {
+        Specification<Book> spec1 = BookSpecifications.uuid(uuid);
+        Specification<Book> spec2 = BookSpecifications.revision(revision);
+        List<Book> result = bookService.findBooksWithSpecs(spec1.and(spec2));
+        if (result.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        return ResponseEntity.ok(result.getFirst());
+    }
+    /**
      * Get current revision of an object.
      *
      * @param uuid
@@ -71,7 +100,6 @@ public class BookController {
     ) {
         Specification<Book> spec1 = BookSpecifications.uuid(uuid);
         Specification<Book> spec2 = BookSpecifications.insideRange(OffsetDateTime.now());
-
         List<Book> result = bookService.findBooksWithSpecs(spec1.and(spec2));
         if (result.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
@@ -99,18 +127,27 @@ public class BookController {
         return ResponseEntity.ok(bookService.findBooksActiveInPeriod(since, until, delta, translateSortProperty(pageable)));
     }
 
-    private Pageable translateSortProperty(Pageable pageable) {
-        if (pageable.getSort().isUnsorted()) {
-            return pageable;
+    private Sort translateSortProperty(Sort sort) {
+        if (sort.isUnsorted()) {
+            return sort;
         }
-        List<Sort.Order> orders = pageable.getSort().stream()
+        List<Sort.Order> orders = sort.stream()
                 .map(order -> switch (order.getProperty()) {
-                    case "uuid" -> new Sort.Order(order.getDirection(), "id.uuid");
-                    case "revision" -> new Sort.Order(order.getDirection(), "id.revision");
+                    case "uuid" -> new Sort.Order(order.getDirection(), "id.uuid");  // convert to embeddedId
+                    case "revision" -> new Sort.Order(order.getDirection(), "id.revision");  // convert to embeddedId
                     case "published" -> new Sort.Order(order.getDirection(), "year");
                     default -> order;
                 })
                 .collect(Collectors.toList());
-        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(orders));
+        return Sort.by(orders);
+    }
+
+
+    private Pageable translateSortProperty(Pageable pageable) {
+        if (pageable.getSort().isUnsorted()) {
+            return pageable;
+        }
+        Sort sort = translateSortProperty(pageable.getSort());
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
     }
 }

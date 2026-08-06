@@ -5,7 +5,6 @@ import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.OffsetDateTime;
-import java.util.List;
 import java.util.UUID;
 
 public class BookSpecifications {
@@ -25,13 +24,10 @@ public class BookSpecifications {
     }
 
     /*
-    SELECT * FROM books WHERE uuid = :uuid AND revision = :revision
+    SELECT * FROM books WHERE revision = :revision
      */
-    public static Specification<Book> uuidRevision(UUID uuid, Integer revision) {
-        return (root, query, cb) -> cb.and(
-                cb.equal(root.get("id").get("uuid"), uuid),
-                cb.equal(root.get("id").get("revision"), revision)
-        );
+    public static Specification<Book> revision(Integer revision) {
+        return (root, query, cb) -> cb.equal(root.get("id").get("revision"), revision);
     }
 
     /*
