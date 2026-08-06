@@ -20,7 +20,7 @@ public interface BookRepository extends JpaRepository<Book, BookId>, JpaSpecific
           AND b.revisionTo > CURRENT_TIMESTAMP
     """)
     int closeCurrentRevision(
-            @Param("id") UUID uuid,
+            @Param("uuid") UUID uuid,
             @Param("revision") Integer revision
     );
 }

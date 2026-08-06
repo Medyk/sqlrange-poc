@@ -1,10 +1,12 @@
 package com.example.sqlrange;
 
+import org.apache.coyote.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -49,6 +51,26 @@ public class BookController {
         return ResponseEntity.ok(updatedBook);
     }
 
+
+    /**
+     * Get current revision of an object.
+     *
+     * @param uuid
+     * @return
+     */
+    @GetMapping(value = "/{uuid}", produces = "application/json")
+    public ResponseEntity<Book> getBook(
+            @PathVariable UUID uuid
+    ) {
+        Specification<Book> spec1 = BookSpecifications.uuid(uuid);
+        Specification<Book> spec2 = BookSpecifications.insideRange(OffsetDateTime.now());
+
+        List<Book> result = bookService.findBooksWithSpecs(spec1.and(spec2));
+        if (result.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(result.getFirst());
+    }
 
     /**
      * Get books.

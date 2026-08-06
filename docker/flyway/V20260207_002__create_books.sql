@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS books
 (
     uuid uuid NOT NULL DEFAULT gen_random_uuid(), -- unique "family" identifier
     revision integer NOT NULL DEFAULT 1,        -- revision number for optimistic locking
-    revision_from timestamp with time zone NOT NULL DEFAULT '2000-01-01 00:00:00+00:00'::timestamp with time zone,  -- timestamp of creation or last revision
+    revision_from timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP::timestamp with time zone,  -- timestamp of creation or last revision
     revision_to timestamp with time zone NOT NULL DEFAULT 'infinity'::timestamp with time zone, -- timestamp of next revision or infinity
     -- https://www.postgresql.org/docs/current/range-types.html
     revision_range tstzrange GENERATED ALWAYS AS (tstzrange(revision_from, revision_to, '[)')) STORED,

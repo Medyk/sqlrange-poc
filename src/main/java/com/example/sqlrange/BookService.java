@@ -20,6 +20,11 @@ public class BookService {
         this.bookRepository = bookRepository;
     }
 
+    public List<Book> findBooksWithSpecs(Specification<Book> specification) {
+        return bookRepository.findAll(specification);
+    }
+
+
     public List<Book> findBooksAtTimestamp(OffsetDateTime timestamp, Pageable pageable) {
         Specification<Book> spec = BookSpecifications.insideRange(timestamp);
 

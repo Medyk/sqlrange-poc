@@ -24,6 +24,8 @@ services:
     volumes:
       - ./flyway:/flyway/sql:ro,z
     restart: "no"
+    depends_on:
+      - db
 
 
 volumes:

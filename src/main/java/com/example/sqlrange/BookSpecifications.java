@@ -6,6 +6,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.UUID;
 
 public class BookSpecifications {
 
@@ -14,6 +15,23 @@ public class BookSpecifications {
      */
     public static Specification<Book> notNull() {
         return (root, query, cb) -> cb.isNotNull(root.get("id").get("uuid"));
+    }
+
+    /*
+    SELECT * FROM books WHERE uuid = :uuid
+     */
+    public static Specification<Book> uuid(UUID uuid) {
+        return (root, query, cb) -> cb.equal(root.get("id").get("uuid"), uuid);
+    }
+
+    /*
+    SELECT * FROM books WHERE uuid = :uuid AND revision = :revision
+     */
+    public static Specification<Book> uuidRevision(UUID uuid, Integer revision) {
+        return (root, query, cb) -> cb.and(
+                cb.equal(root.get("id").get("uuid"), uuid),
+                cb.equal(root.get("id").get("revision"), revision)
+        );
     }
 
     /*
