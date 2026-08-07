@@ -14,14 +14,11 @@ CREATE TABLE IF NOT EXISTS books
     pub_year integer NOT NULL,                  -- publication year of the book
     genre text NOT NULL,                        -- genre of the book
     -- constraints
-    CONSTRAINT book_c_uuid PRIMARY KEY (uuid, revision_from),
+    -- https://neon.com/postgresql/18/temporal-constraints
+    CONSTRAINT book_c_uuid PRIMARY KEY (uuid, revision_range WITHOUT OVERLAPS), -- no overlapping revisions
     CONSTRAINT book_c_unique_revisions_per_uuid UNIQUE (uuid, revision),
-    CONSTRAINT book_c_check_revision_positive CHECK (revision >= 1),
-    CONSTRAINT book_c_no_empty_revisions CHECK (revision_to > revision_from),
-    CONSTRAINT book_c_no_overlapping_revisions EXCLUDE USING gist (
-        uuid WITH =,
-        revision_range WITH &&
-    )
+    CONSTRAINT book_c_no_empty_revisions CHECK (NOT isempty(revision_range)), -- no empty revisions
+    CONSTRAINT book_c_check_revision_positive CHECK (revision >= 1)
 );
 
 -- indexes

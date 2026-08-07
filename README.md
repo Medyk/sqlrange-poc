@@ -8,9 +8,6 @@ For business dates + audit dates see [Bi-Temporal Modeling](https://en.wikipedia
 
 ```bash
 # setup database
-# run twice because there is no check for flyway to wait for database
-podman compose up
-CTRL+C
 podman compose up
 
 # if you need to change initial data you need to remove volume

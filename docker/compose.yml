@@ -17,6 +17,7 @@ services:
     image: flyway/flyway:12
     user: 1000:1000
     environment:
+      FLYWAY_CONNECT_RETRIES: 10
       FLYWAY_USER: docker
       FLYWAY_PASSWORD: docker
       FLYWAY_URL: jdbc:postgresql://db:5432/docker
