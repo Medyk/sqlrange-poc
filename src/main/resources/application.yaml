@@ -8,3 +8,7 @@ spring:
     url: jdbc:postgresql://localhost:5432/docker
   jpa:
     show-sql: true
+  # https://docs.spring.io/spring-boot/reference/using/devtools.html#using.devtools.property-defaults
+  web:
+    error:
+      include-stacktrace: never
